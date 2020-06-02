@@ -3,30 +3,27 @@
 namespace App\Exports;
 
 use App\User;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Contracts\View\View;
-use Maatwebsite\Excel\Concerns\FromQuery;
+use App\Exports\Sheets\UsersPerMonthSheet;
 use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithMultipleSheets;
 
-class UsersExport implements FromQuery, ShouldQueue
+class UsersExport implements WithMultipleSheets
 {
     use Exportable;
 
-    private $date;
+    private $year;
 
-    public function forDate($date)
+    public function forYear($year)
     {
-        $this->date = $date;
+        $this->year = $year;
 
         return $this;
     }
 
-
-    /**
-    * @return \Illuminate\Database\Query\Builder
-    */
-    public function query()
+    public function sheets(): array
     {
-        return User::query();
+        return collect(range(1,12))->map(function ($month) {
+            return new UsersPerMonthSheet($this->year, $month);
+        })->toArray();
     }
 }
