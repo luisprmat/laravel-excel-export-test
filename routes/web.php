@@ -1,18 +1,17 @@
 <?php
 
+use App\User;
+use App\Exports\UsersExport;
 use Illuminate\Support\Facades\Route;
-
-/*
-|--------------------------------------------------------------------------
-| Web Routes
-|--------------------------------------------------------------------------
-|
-| Here is where you can register web routes for your application. These
-| routes are loaded by the RouteServiceProvider within a group which
-| contains the "web" middleware group. Now create something great!
-|
-*/
+use App\Jobs\NotifyUserOfCompletedExport;
 
 Route::get('/', function () {
-    return view('welcome');
+    $user = User::first(); // Debería ser el usuario autenticado - auth()->user()
+    $filePath = asset('storage/users.xlsx');
+
+    (new UsersExport)->store('users.xlsx', 'public')->chain([
+        new NotifyUserOfCompletedExport($user, $filePath)
+    ]);
+
+    return 'La exportación ha comenzado, te enviaremos un email cuando esté listo.';
 });
